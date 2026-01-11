@@ -27,7 +27,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -68,8 +68,12 @@ typedef struct{
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint32_t enc_prev = 0;
+char UART_Input[] = "XXX";
+uint8_t UART_InputLen = strlen((char*)UART_Input);
+char UART_Output[50];
+// uart variables
 
+uint32_t enc_prev = 0; // stored previous value counted by the encoder
 float duty = 0; // duty of PWM cycle period
 
 float speed_ref = 0; // y_ref
@@ -86,6 +90,14 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+	if(huart == &huart3){
+		// set speed_ref that has been set by a user
+		speed_ref = UART_Input;
+		HAL_UART_Receive_IT(&huart3, (uint8_t*)UART_Input, UART_InputLen);
+	}
+}
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if(htim == &htim4){
 		uint32_t enc = __HAL_TIM_GET_COUNTER(&htim1);
@@ -96,15 +108,23 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 
 		PID_Update(&Pid1);
 		SetDuty(Pid1.u);
+
+		// output to user by UART
+		SendOutput();
 	}
 }
 
-float ERROR_calc(){
-	return (speed_ref - speed);
+void SendOutput(){
+	snprintf(UART_Output, sizeof(UART_Output),"Actual speed [rpm]: %d\r\n", speed_rpm);
+	uint8_t UART_OutputLen = strlen((char*)UART_Output);
+
+	HAL_UART_Transmit(&huart3, (uint8_t*)UART_Output, UART_OutputLen, HAL_MAX_DELAY);
 }
 
+
+
 void PID_update(PID *pid){
-	float error_temp = ERROR_calc();
+	float error_temp = speed_ref - speed; // calculate error
 	pid->e_prim = pid->e - e_temp;
 	pid->e = e_temp;
 
@@ -113,11 +133,8 @@ void PID_update(PID *pid){
 	pid->ud = pid->Kd*pid->e_prim;
 
 	pid->u= pid->up + pid->ui + pid->ud;
-	Saturation(&pid);
-}
 
-void Saturation(PID *pid){
-	if(pid->u >= U_SAT_UP){pid->u = 100;}
+	if(pid->u >= U_SAT_UP){pid->u = 100;} // saturation
 	else if(pid->u <= U_SAT_DOWN){pid->u = 0;}
 }
 
@@ -170,6 +187,10 @@ int main(void)
   __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 0); // set duty to 0
 
   HAL_TIM_Base_Start_IT(&htim4); // sampling
+
+
+  HAL_UART_Receive_IT(&huart3, (uint8_t)UART_Input, UART_InputLen); // start uart receiving
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
