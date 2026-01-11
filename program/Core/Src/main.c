@@ -54,6 +54,10 @@ typedef struct{
 #define ENC_PULSES_PER_REV 20
 #define U_SAT_UP 100
 #define U_SAT_DOWN 0
+
+#define KP 0
+#define KI 0
+#define KD 0
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -71,7 +75,7 @@ float duty = 0; // duty of PWM cycle period
 float speed_ref = 0; // y_ref
 float speed = 0; // y
 
-PID Pid1 = {0,0,0,0,0,0,0,0,0};
+PID Pid1 = {(float)KP,(float)KI,(float)KD,0,0,0,0,0,0};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
