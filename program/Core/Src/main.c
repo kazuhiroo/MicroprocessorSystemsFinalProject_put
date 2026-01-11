@@ -32,12 +32,28 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+typedef struct{
+	float Kp;
+	float Ki;
+	float Kd;
 
+	float e;
+	float e_prim;
+
+	float u;
+
+	float up;
+	float ui;
+	float ud;
+} PID;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define SAMPLING_PERIOD 0.01
+#define ENC_PULSES_PER_REV 20
+#define U_SAT_UP 100
+#define U_SAT_DOWN 0
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -48,7 +64,14 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+uint32_t enc_prev = 0;
 
+float duty = 0; // duty of PWM cycle period
+
+float speed_ref = 0; // y_ref
+float speed = 0; // y
+
+PID Pid1 = {0,0,0,0,0,0,0,0,0};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -59,6 +82,44 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
+	if(htim == &htim4){
+		uint32_t enc = __HAL_TIM_GET_COUNTER(&htim1);
+		uint32_t diff = enc - enc_prev; // get the difference from encoder
+		enc_prev = enc;
+
+		speed = (diff / (float)ENC_PULSES_PER_REV) * (60.0f / SAMPLING_PERIOD); //rpm
+
+		PID_Update(&Pid1);
+		SetDuty(Pid1.u);
+	}
+}
+
+float ERROR_calc(){
+	return (speed_ref - speed);
+}
+
+void PID_update(PID *pid){
+	float error_temp = ERROR_calc();
+	pid->e_prim = pid->e - e_temp;
+	pid->e = e_temp;
+
+	pid->up = pid->Kp*pid->e;
+	pid->ui += pid->Ki*SAMPLING_PERIOD*pid->e;
+	pid->ud = pid->Kd*pid->e_prim;
+
+	pid->u= pid->up + pid->ui + pid->ud;
+	Saturation(&pid);
+}
+
+void Saturation(PID *pid){
+	if(pid->u >= U_SAT_UP){pid->u = 100;}
+	else if(pid->u <= U_SAT_DOWN){pid->u = 0;}
+}
+
+void SetDuty(float duty){
+	__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 1000*duty); // duty cycle of PWM
+}
 
 /* USER CODE END 0 */
 
@@ -97,8 +158,14 @@ int main(void)
   MX_USB_OTG_FS_PCD_Init();
   MX_TIM1_Init();
   MX_TIM3_Init();
+  MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
+  HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL); // enkoder
 
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1); // pwm
+  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 0); // set duty to 0
+
+  HAL_TIM_Base_Start_IT(&htim4); // sampling
   /* USER CODE END 2 */
 
   /* Infinite loop */
