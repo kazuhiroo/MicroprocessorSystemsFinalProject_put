@@ -118,7 +118,7 @@ void Saturation(PID *pid){
 }
 
 void SetDuty(float duty){
-	__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 1000*duty); // duty cycle of PWM
+	__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 10*duty); // duty cycle of PWM
 }
 
 /* USER CODE END 0 */
