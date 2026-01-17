@@ -14,6 +14,8 @@
 #define KI 0.0f
 #define KD 0.0f
 
+#define CLOSED_LOOP 0
+
 // saturation values
 #define U_SAT_UP            1000.0f
 #define U_SAT_DOWN          0.0f

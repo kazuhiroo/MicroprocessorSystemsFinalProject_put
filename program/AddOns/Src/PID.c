@@ -27,7 +27,13 @@ void PID_update(PID *pid){
         return;
     }
 
-    e = pid->y_ref - pid->y; // calculate current error
+    if(CLOSED_LOOP){
+    	e = pid->y_ref - pid->y; // calculate current error
+    }
+    else{
+    	e = pid->y_ref;
+    }
+
 
     // proportional
     pid->up = pid->Kp * e;
