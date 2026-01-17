@@ -19,6 +19,11 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include <stdlib.h>
+
+// controller
+#include "PID.h"
+
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -28,7 +33,9 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define FB_TIMER_FREQ       1000000.0f
+#define ENC_PULSES_PER_REV  20 // signals per single rotation from the encoding disc
+#define MAX_SPEED 			150.0f // max speed for 5V from the VCC
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -39,49 +46,35 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-typedef struct{
-    float Kp;
-    float Ki;
-    float Kd;
-
-    float e;
-    float u;
-    float up;
-    float ui;
-    float ud;
-} PID;
-
-
-#define PWM_MIN_START       760.0f
-#define FB_TIMER_FREQ       1000000.0f
-#define SAMPLING_PERIOD     0.01f
-#define ENC_PULSES_PER_REV  20
-#define U_SAT_UP            1000.0f
-#define U_SAT_DOWN          0.0f
-#define MAX_SPEED 			150.0f
-
-
-#define KP 2.0f
-#define KI 3.0f
-#define KD 0.0f
-
-void PID_update(PID *pid);
 
 _Bool USER_Btn_flag = 0;
 
 _Bool ic_start_flag = 1;
-volatile uint32_t ic_prev = 0;
-volatile float speed = 0.0f;
-volatile float speed_filt = 0.0f;
-volatile float speed_ref = 70.0f;
-volatile float speed_ref_new = 70.0f;
+uint32_t ic_prev = 0;
 
-volatile float life_timer = 0;
-PID Pid1 = {KP, KI, KD, 0, 0, 0, 0, 0};
+float life_timer = 0;
 
 char UART_Message[] = "000";
 uint8_t UART_MessageLen = 3;
 _Bool UART_ReceiveFlag = 0;
+
+
+
+PID Pid1 = {
+		.Kp = KP,
+		.Ki = KI,
+		.Kd =KD,
+
+		.e = 0.0f,
+		.u = 0.0f,
+		.up = 0.0f,
+		.ui = 0.0f,
+		.ud = 0.0f,
+
+		.y = 0.0f,
+		.y_ref = 0.0f
+};
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -93,16 +86,14 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
-{
-    if (htim == &htim4 && htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1)
-    {
+
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim){
+    if (htim == &htim4 && htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1){
         uint32_t now = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
         uint32_t arr = __HAL_TIM_GET_AUTORELOAD(htim);
         uint32_t diff;
 
-        if (ic_start_flag)
-        {
+        if (ic_start_flag){
             ic_start_flag = 0;
             ic_prev = now;
             return;
@@ -112,29 +103,25 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
             diff = now - ic_prev;
         else
             diff = (arr - ic_prev) + now + 1;
-
         ic_prev = now;
 
-        if (diff > 0)
-        {
-            speed = 60.0f * FB_TIMER_FREQ / (ENC_PULSES_PER_REV * diff);
-            speed_filt = 0.8f * speed_filt + 0.2f * speed;
+        if (diff > 0){
+        	float speed = 60.0f * FB_TIMER_FREQ / (ENC_PULSES_PER_REV * diff);
+        	Pid1.y = 0.8f * Pid1.y + 0.2f * speed;
         }
 
         life_timer = 0.0f;
     }
 }
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-    if (htim == &htim6)
-    {
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
+    if (htim == &htim6){
         PID_update(&Pid1);
+        __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, (uint32_t)Pid1.u);
 
-        life_timer += SAMPLING_PERIOD;
-        if(life_timer >= 10*SAMPLING_PERIOD){
-        	speed = 0;
-        	speed_filt = 0;
+        life_timer += SAMPLING_PERIOD; // if TIM_IC checks too long for the input set speed to zero (means the motor has stopped)
+        if(life_timer >= 100*SAMPLING_PERIOD){
+        	Pid1.y = 0;
         	life_timer = 0.0f;
         }
     }
@@ -146,50 +133,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
     }
 }
 
-void PID_update(PID *pid)
-{
-    static _Bool start_up = 1;
-    float e;
-
-    if(speed_ref_new != speed_ref){
-    	speed_ref = speed_ref_new;
-    	pid->ui = 0.0;
-    	e = 0.0f;
-    }
-
-    if (start_up){
-        __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, PWM_MIN_START);
-
-        if (speed_filt > 5.0f)     // tylko wykrycie ruchu
-        {
-            start_up = 0;
-            pid->ui = PWM_MIN_START;   // bumpless transfer
-            pid->e  = 0.0f;
-        }
-        return;
-    }
-
-    e = speed_ref - speed_filt;
-
-    pid->up = pid->Kp * e;
-
-    if(pid->u >= U_SAT_UP || pid->u <= U_SAT_DOWN) pid->ui += 0;
-    else pid->ui += pid->Ki * e * SAMPLING_PERIOD;
-
-    pid->ud = pid->Kd * (e - pid->e) / SAMPLING_PERIOD;
-
-    pid->u = pid->up + pid->ui + pid->ud;
-
-    if (pid->u > U_SAT_UP)   pid->u = U_SAT_UP;
-    if (pid->u < U_SAT_DOWN) pid->u = U_SAT_DOWN;
-
-    pid->e = e;
-
-    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, (uint32_t)pid->u);
-}
-
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
     if (huart == &huart3){
     	UART_ReceiveFlag = 1;
     	HAL_UART_Receive_IT(&huart3, (uint8_t*)UART_Message, 3);
@@ -234,12 +178,12 @@ int main(void)
   MX_TIM4_Init();
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
-  HAL_UART_Receive_IT(&huart3, (uint8_t*)UART_Message, 3);
+  HAL_UART_Receive_IT(&huart3, (uint8_t*)UART_Message, 3); // start receiving info
 
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
-  HAL_TIM_IC_Start_IT(&htim4, TIM_CHANNEL_1);
-  HAL_TIM_Base_Start_IT(&htim6);
-  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 0);
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1); // init pwm
+  HAL_TIM_IC_Start_IT(&htim4, TIM_CHANNEL_1); // sampling from the encoder
+  HAL_TIM_Base_Start_IT(&htim6); // init sample time
+  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 0); // set pwm start value to zero
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -248,16 +192,16 @@ int main(void)
   {
 	  if (USER_Btn_flag){
 		  USER_Btn_flag = 0;
-		  speed_ref_new += 10.0f;
-		  if (speed_ref_new > MAX_SPEED) speed_ref_new = 0.0f;
+		  Pid1.y_ref += 10.0f;
+		  if (Pid1.y_ref > MAX_SPEED) Pid1.y_ref = 0.0f;
 	  }
+
 	  if(UART_ReceiveFlag){
 		UART_ReceiveFlag = 0;
-		UART_Message[UART_MessageLen] = '\0';
 		int rx = atoi(UART_Message);
 
-		if(rx >= MAX_SPEED) speed_ref_new = MAX_SPEED;
-		else speed_ref_new = rx;
+		if(rx >= MAX_SPEED) Pid1.y_ref = MAX_SPEED;
+		else Pid1.y_ref = rx;
 	  }
     /* USER CODE END WHILE */
 
