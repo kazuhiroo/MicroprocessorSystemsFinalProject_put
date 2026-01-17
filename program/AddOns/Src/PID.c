@@ -18,7 +18,7 @@ void PID_update(PID *pid){
 
     if(start_up){ // set min value for the DC motor to accelerate
         pid->u = PWM_MIN_START;
-        if(pid->y > 20.0){
+        if(pid->y > 50.0){
         	pid->ui = PWM_MIN_START; // signal transfer
         	pid->e = 0.0f; // reset error
 

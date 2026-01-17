@@ -22,7 +22,7 @@
 
 // controller
 #include "PID.h"
-
+#include "Filters.h"
 
 /* USER CODE END Includes */
 
@@ -47,8 +47,6 @@
 
 /* USER CODE BEGIN PV */
 
-_Bool USER_Btn_flag = 0;
-
 _Bool ic_start_flag = 1;
 uint32_t ic_prev = 0;
 
@@ -56,9 +54,13 @@ float life_timer = 0;
 
 char UART_Message[] = "000";
 uint8_t UART_MessageLen = 3;
+
 _Bool UART_ReceiveFlag = 0;
+_Bool UART_TransmitFlag = 0;
+_Bool USER_Btn_flag = 0;
 
-
+volatile float data[10000];
+int data_idx = 0;
 
 PID Pid1 = {
 		.Kp = KP,
@@ -107,23 +109,27 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim){
 
         if (diff > 0){
         	float speed = 60.0f * FB_TIMER_FREQ / (ENC_PULSES_PER_REV * diff);
-        	Pid1.y = 0.8f * Pid1.y + 0.2f * speed;
+        	speed = 0.8f * Pid1.y + 0.2f * speed;
+        	Pid1.y = AvgFilter(speed);
         }
 
-        life_timer = 0.0f;
+        life_timer = 0.0f; // motor on - reset life timer
     }
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
     if (htim == &htim6){
         PID_update(&Pid1);
-        __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, (uint32_t)Pid1.u);
 
-        life_timer += SAMPLING_PERIOD; // if TIM_IC checks too long for the input set speed to zero (means the motor has stopped)
-        if(life_timer >= 100*SAMPLING_PERIOD){
+        life_timer += SAMPLING_PERIOD; // if TIM_IC waits too long for the input set speed to zero (means the motor has stopped)
+        if(life_timer >= 300*SAMPLING_PERIOD){
         	Pid1.y = 0;
+        	Pid1.u = 0;
         	life_timer = 0.0f;
         }
+        __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, (uint32_t)Pid1.u);
+
+        UART_TransmitFlag = 1;
     }
 }
 
@@ -136,7 +142,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
     if (huart == &huart3){
     	UART_ReceiveFlag = 1;
-    	HAL_UART_Receive_IT(&huart3, (uint8_t*)UART_Message, 3);
     }
 }
 /* USER CODE END 0 */
@@ -188,11 +193,11 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
+  while (1){
 	  if (USER_Btn_flag){
 		  USER_Btn_flag = 0;
-		  Pid1.y_ref += 10.0f;
+		  Pid1.y_ref = 100.0f;
+
 		  if (Pid1.y_ref > MAX_SPEED) Pid1.y_ref = 0.0f;
 	  }
 
@@ -202,6 +207,16 @@ int main(void)
 
 		if(rx >= MAX_SPEED) Pid1.y_ref = MAX_SPEED;
 		else Pid1.y_ref = rx;
+
+		HAL_UART_Receive_IT(&huart3, (uint8_t*)UART_Message, 3);
+	  }
+
+	  if(UART_TransmitFlag){
+		UART_TransmitFlag = 0;
+		char tx[32];
+		int len = snprintf(tx, sizeof(tx), "%.3f\r\n", Pid1.y);
+
+		HAL_UART_Transmit(&huart3, (uint8_t*)tx, len, 1);
 	  }
     /* USER CODE END WHILE */
 

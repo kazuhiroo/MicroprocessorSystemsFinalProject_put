@@ -10,15 +10,15 @@
 #define PID_H_
 
 // PID controller parameters
-#define KP 2.0f
-#define KI 3.0f
+#define KP 1.0f
+#define KI 0.0f
 #define KD 0.0f
 
 // saturation values
 #define U_SAT_UP            1000.0f
 #define U_SAT_DOWN          0.0f
 
-#define PWM_MIN_START       760.0f
+#define PWM_MIN_START       800.0f
 #define SAMPLING_PERIOD 	0.01f
 
 typedef struct{
