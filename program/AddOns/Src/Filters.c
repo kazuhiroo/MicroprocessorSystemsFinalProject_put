@@ -9,7 +9,7 @@
 #include "Filters.h"
 
 /*
- * @brief   : moving average filter defined by the samples quantity
+ * @brief   : moving average filter defined by the samples quantity.
  *
  * */
 float AvgFilter(float input){
