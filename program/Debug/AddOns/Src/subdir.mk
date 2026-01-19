@@ -5,16 +5,16 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../AddOns/Src/Filters.c \
-../AddOns/Src/PID.c 
+../AddOns/Src/Control.c \
+../AddOns/Src/Filters.c 
 
 OBJS += \
-./AddOns/Src/Filters.o \
-./AddOns/Src/PID.o 
+./AddOns/Src/Control.o \
+./AddOns/Src/Filters.o 
 
 C_DEPS += \
-./AddOns/Src/Filters.d \
-./AddOns/Src/PID.d 
+./AddOns/Src/Control.d \
+./AddOns/Src/Filters.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
@@ -24,7 +24,7 @@ AddOns/Src/%.o AddOns/Src/%.su AddOns/Src/%.cyclo: ../AddOns/Src/%.c AddOns/Src/
 clean: clean-AddOns-2f-Src
 
 clean-AddOns-2f-Src:
-	-$(RM) ./AddOns/Src/Filters.cyclo ./AddOns/Src/Filters.d ./AddOns/Src/Filters.o ./AddOns/Src/Filters.su ./AddOns/Src/PID.cyclo ./AddOns/Src/PID.d ./AddOns/Src/PID.o ./AddOns/Src/PID.su
+	-$(RM) ./AddOns/Src/Control.cyclo ./AddOns/Src/Control.d ./AddOns/Src/Control.o ./AddOns/Src/Control.su ./AddOns/Src/Filters.cyclo ./AddOns/Src/Filters.d ./AddOns/Src/Filters.o ./AddOns/Src/Filters.su
 
 .PHONY: clean-AddOns-2f-Src
 

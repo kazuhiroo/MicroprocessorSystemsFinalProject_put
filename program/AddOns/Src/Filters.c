@@ -17,7 +17,7 @@ float AvgFilter(float input){
 	float output = 0.0f;
 	float sum = 0.0f;
 
-	for(int i = 0; i < AVG_FILT_SQ; i++){
+	for(int i = 0; i < AVG_FILT_SQ - 1; i++){
 		input_buffer[i] = input_buffer[i+1];
 	}
 

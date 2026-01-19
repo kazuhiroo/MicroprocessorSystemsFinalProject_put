@@ -21,7 +21,7 @@
 #include <stdlib.h>
 
 // controller
-#include "PID.h"
+#include "Control.h"
 #include "Filters.h"
 
 /* USER CODE END Includes */
@@ -35,7 +35,7 @@
 /* USER CODE BEGIN PD */
 #define FB_TIMER_FREQ       1000000.0f
 #define ENC_PULSES_PER_REV  20 // signals per single rotation from the encoding disc
-#define MAX_SPEED 			150.0f // max speed for 5V from the VCC
+#define MAX_SPEED 			150.0f // max speed for 5V from the VC
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -46,10 +46,9 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
 _Bool ic_start_flag = 1;
 uint32_t ic_prev = 0;
-
+uint32_t u_global = 0;
 float life_timer = 0;
 
 char UART_Message[] = "000";
@@ -57,24 +56,22 @@ uint8_t UART_MessageLen = 3;
 
 _Bool UART_ReceiveFlag = 0;
 _Bool UART_TransmitFlag = 0;
+uint8_t UART_TransmitArr = 0;
 _Bool USER_Btn_flag = 0;
-
-volatile float data[10000];
-int data_idx = 0;
 
 PID Pid1 = {
 		.Kp = KP,
 		.Ki = KI,
-		.Kd =KD,
+		.Kd = KD,
 
-		.e = 0.0f,
-		.u = 0.0f,
+		.e  = 0.0f,
+		.u  = 0.0f,
 		.up = 0.0f,
 		.ui = 0.0f,
 		.ud = 0.0f,
 
 		.y = 0.0f,
-		.y_ref = 0.0f
+		.y_ref = 50.0f
 };
 
 /* USER CODE END PV */
@@ -95,7 +92,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim){
         uint32_t arr = __HAL_TIM_GET_AUTORELOAD(htim);
         uint32_t diff;
 
-        if (ic_start_flag){
+        if (ic_start_flag){ // first input
             ic_start_flag = 0;
             ic_prev = now;
             return;
@@ -109,8 +106,9 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim){
 
         if (diff > 0){
         	float speed = 60.0f * FB_TIMER_FREQ / (ENC_PULSES_PER_REV * diff);
-        	speed = 0.8f * Pid1.y + 0.2f * speed;
-        	Pid1.y = AvgFilter(speed);
+        	if(speed >1.5*MAX_SPEED) return;
+        	speed = 0.8f * Pid1.y + 0.2f * speed; // small LPF
+        	Pid1.y = AvgFilter(speed); // average filter
         }
 
         life_timer = 0.0f; // motor on - reset life timer
@@ -119,17 +117,32 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim){
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
     if (htim == &htim6){
+        float u_ff = KFF * Pid1.y_ref;
         PID_update(&Pid1);
 
-        life_timer += SAMPLING_PERIOD; // if TIM_IC waits too long for the input set speed to zero (means the motor has stopped)
-        if(life_timer >= 300*SAMPLING_PERIOD){
-        	Pid1.y = 0;
-        	Pid1.u = 0;
-        	life_timer = 0.0f;
-        }
-        __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, (uint32_t)Pid1.u);
+        float u_calc = u_ff + Pid1.u;
 
-        UART_TransmitFlag = 1;
+        if(u_calc > (float)PWM_MAX) u_calc = (float)PWM_MAX;
+        if(u_calc < (float)PWM_MIN) u_calc = (float)PWM_MIN;
+
+        u_global = (uint32_t)u_calc;
+
+        life_timer += SAMPLING_PERIOD;
+        if(life_timer >= 1000 * SAMPLING_PERIOD){
+            Pid1.y = 0;
+            u_global = 0;
+            life_timer = 0.0f;
+
+            PID_reset(&Pid1);
+        }
+
+        __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, u_global);
+
+        UART_TransmitArr += 1;
+        if(UART_TransmitArr == 100){
+            UART_TransmitArr = 0;
+            UART_TransmitFlag = 1;
+        }
     }
 }
 
@@ -196,9 +209,7 @@ int main(void)
   while (1){
 	  if (USER_Btn_flag){
 		  USER_Btn_flag = 0;
-		  Pid1.y_ref = 100.0f;
-
-		  if (Pid1.y_ref > MAX_SPEED) Pid1.y_ref = 0.0f;
+		  PID_reset(&Pid1);
 	  }
 
 	  if(UART_ReceiveFlag){

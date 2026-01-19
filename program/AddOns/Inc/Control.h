@@ -1,5 +1,5 @@
 /*
-  * @file    : PID.h
+  * @file    : Control.h
   * @author  : a.katowski, https://github.com/kazuhiroo
   * @date    : Jan 17, 2026
   * @brief   : PID controller algorithm implementation for a sa 3-6V DC Motor.
@@ -9,18 +9,24 @@
 #ifndef PID_H_
 #define PID_H_
 
-// PID controller parameters
-#define KP 1.0f
-#define KI 0.0f
-#define KD 0.0f
+// object parameters G(s) = K/(sT+1)
+#define T 0.728823f
+#define K 1.5277f
 
-#define CLOSED_LOOP 0
+// PID controller parameters
+#define KP 2.0f
+#define KI 2.0f
+#define KD 1.0f
+#define KFF 0.0f
+
+#define CLOSED_LOOP 1
 
 // saturation values
 #define U_SAT_UP            1000.0f
 #define U_SAT_DOWN          0.0f
 
-#define PWM_MIN_START       800.0f
+#define PWM_MIN       		480
+#define PWM_MAX 			1000
 #define SAMPLING_PERIOD 	0.01f
 
 typedef struct{
@@ -48,6 +54,9 @@ void PID_update(PID *pid);
  * @brief   : function for absolute controller reset
  *
  * */
-void PID_Reset(PID *pid);
+void PID_reset(PID *pid);
+
+
+
 
 #endif /* PID_H_ */
