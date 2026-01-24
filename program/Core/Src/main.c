@@ -128,7 +128,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
         float u_calc = u_ff + Pid1.u;
 
         if(u_calc > (float)PWM_MAX) u_calc = (float)PWM_MAX;
-//        if(u_calc < (float)PWM_MIN) u_calc = (float)PWM_MIN;
+        if(u_calc < (float)PWM_MIN) u_calc = (float)PWM_MIN;
 
         u_global = (uint32_t)u_calc;
 

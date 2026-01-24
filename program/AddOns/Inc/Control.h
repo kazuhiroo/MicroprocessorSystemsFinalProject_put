@@ -25,11 +25,11 @@
 #define U_SAT_UP            1000.0f
 #define U_SAT_DOWN          0.0f
 
-#define PWM_MIN       		500
+#define PWM_MIN       		480
 #define PWM_MAX 			1000
 #define SAMPLING_PERIOD 	0.01f
 
-#define DEADZONE_PWM		600
+#define DEADZONE_PWM		500
 
 
 typedef struct{
