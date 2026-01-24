@@ -25,9 +25,12 @@
 #define U_SAT_UP            1000.0f
 #define U_SAT_DOWN          0.0f
 
-#define PWM_MIN       		480
+#define PWM_MIN       		500
 #define PWM_MAX 			1000
 #define SAMPLING_PERIOD 	0.01f
+
+#define DEADZONE_PWM		600
+
 
 typedef struct{
     float Kp;
@@ -55,8 +58,11 @@ void PID_update(PID *pid);
  *
  * */
 void PID_reset(PID *pid);
-
-
+/*
+ * @brief   : function for compensation the deadzone due to the friction
+ *
+ * */
+static float Deadzone_compensation(float u);
 
 
 #endif /* PID_H_ */

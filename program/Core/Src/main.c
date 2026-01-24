@@ -35,6 +35,8 @@
 #define ENC_PULSES_PER_REV  20 // signals per single rotation from the encoding disc
 #define MAX_SPEED 			150.0f // max speed for 5V from the VC
 #define ENC_CONST 			4
+#define START_SPEED 		100
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -61,6 +63,7 @@ _Bool USER_Btn_flag = 0;
 uint8_t ENC_Cnt = 0;
 uint8_t ENC_Cnt_prev = 0;
 
+
 PID Pid1 = {
 		.Kp = KP,
 		.Ki = KI,
@@ -73,7 +76,7 @@ PID Pid1 = {
 		.ud = 0.0f,
 
 		.y = 0.0f,
-		.y_ref = 100.0f
+		.y_ref = START_SPEED
 };
 
 /* USER CODE END PV */
@@ -125,18 +128,18 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
         float u_calc = u_ff + Pid1.u;
 
         if(u_calc > (float)PWM_MAX) u_calc = (float)PWM_MAX;
-        if(u_calc < (float)PWM_MIN) u_calc = (float)PWM_MIN;
+//        if(u_calc < (float)PWM_MIN) u_calc = (float)PWM_MIN;
 
         u_global = (uint32_t)u_calc;
 
         life_timer += SAMPLING_PERIOD;
-        if(life_timer >= 1000 * SAMPLING_PERIOD){
-            Pid1.y = 0;
-            u_global = 0;
-            life_timer = 0.0f;
-
-            PID_reset(&Pid1);
-        }
+//        if(life_timer >= 1000 * SAMPLING_PERIOD){
+//            Pid1.y = 0;
+//            u_global = 0;
+//            life_timer = 0.0f;
+//
+//            PID_reset(&Pid1);
+//        }
 
         __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, u_global);
 
@@ -200,28 +203,32 @@ int main(void)
   HAL_UART_Receive_IT(&huart3, (uint8_t*)UART_Message, 3); // start receiving info
 
   HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL); // init encoder mode
-  __HAL_TIM_SET_COUNTER(&htim1, 0);
+  __HAL_TIM_SET_COUNTER(&htim1, START_SPEED*ENC_CONST);
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1); // init pwm
   HAL_TIM_IC_Start_IT(&htim4, TIM_CHANNEL_1); // sampling from the encoder
   HAL_TIM_Base_Start_IT(&htim6); // init sample time
-  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 0); // set pwm start value to zero
+  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, PWM_MIN); // set pwm start value to zero
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1){
-
 	  // input via encoder
 	  ENC_Cnt = __HAL_TIM_GET_COUNTER(&htim1)/ENC_CONST;
 	  if(ENC_Cnt_prev != ENC_Cnt){
 		  if(ENC_Cnt >= MAX_SPEED){
 			  ENC_Cnt = MAX_SPEED;
+			  Pid1.y_ref = MAX_SPEED;
 		  }
 		  else if(ENC_Cnt <= 0){
 			  ENC_Cnt = 0;
+			  Pid1.y_ref = 0;
+		  }
+		  else{
+			  Pid1.y_ref = ENC_Cnt;
 		  }
 
-		  Pid1.y_ref = ENC_Cnt;
+
 		  ENC_Cnt_prev = ENC_Cnt;
 	  }
 
