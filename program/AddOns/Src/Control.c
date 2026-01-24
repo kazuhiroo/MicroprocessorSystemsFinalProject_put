@@ -55,6 +55,6 @@ void PID_reset(PID *pid){
 	pid->up = 0;
 	pid->ui = 0;
 	pid->ud = 0;
-	pid->y = 0
+	pid->y = 0;
 	pid->e = 0;
 }

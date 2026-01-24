@@ -8,11 +8,9 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "eth.h"
 #include "i2c.h"
 #include "tim.h"
 #include "usart.h"
-#include "usb_otg.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -36,6 +34,7 @@
 #define FB_TIMER_FREQ       1000000.0f
 #define ENC_PULSES_PER_REV  20 // signals per single rotation from the encoding disc
 #define MAX_SPEED 			150.0f // max speed for 5V from the VC
+#define ENC_CONST 			4
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -56,8 +55,11 @@ uint8_t UART_MessageLen = 3;
 
 _Bool UART_ReceiveFlag = 0;
 _Bool UART_TransmitFlag = 0;
-uint8_t UART_TransmitArr = 0;
+uint8_t UART_TransmitCnt = 0;
 _Bool USER_Btn_flag = 0;
+
+uint8_t ENC_Cnt = 0;
+uint8_t ENC_Cnt_prev = 0;
 
 PID Pid1 = {
 		.Kp = KP,
@@ -71,7 +73,7 @@ PID Pid1 = {
 		.ud = 0.0f,
 
 		.y = 0.0f,
-		.y_ref = 50.0f
+		.y_ref = 100.0f
 };
 
 /* USER CODE END PV */
@@ -138,9 +140,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 
         __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, u_global);
 
-        UART_TransmitArr += 1;
-        if(UART_TransmitArr == 100){
-            UART_TransmitArr = 0;
+        UART_TransmitCnt += 1;
+        if(UART_TransmitCnt == 100){
+            UART_TransmitCnt = 0;
             UART_TransmitFlag = 1;
         }
     }
@@ -188,16 +190,17 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_ETH_Init();
   MX_I2C1_Init();
   MX_USART3_UART_Init();
-  MX_USB_OTG_FS_PCD_Init();
   MX_TIM3_Init();
   MX_TIM4_Init();
   MX_TIM6_Init();
+  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
   HAL_UART_Receive_IT(&huart3, (uint8_t*)UART_Message, 3); // start receiving info
 
+  HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL); // init encoder mode
+  __HAL_TIM_SET_COUNTER(&htim1, 0);
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1); // init pwm
   HAL_TIM_IC_Start_IT(&htim4, TIM_CHANNEL_1); // sampling from the encoder
   HAL_TIM_Base_Start_IT(&htim6); // init sample time
@@ -207,6 +210,23 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1){
+
+	  // input via encoder
+	  ENC_Cnt = __HAL_TIM_GET_COUNTER(&htim1)/ENC_CONST;
+	  if(ENC_Cnt_prev != ENC_Cnt){
+		  if(ENC_Cnt >= MAX_SPEED){
+			  ENC_Cnt = MAX_SPEED;
+		  }
+		  else if(ENC_Cnt <= 0){
+			  ENC_Cnt = 0;
+		  }
+
+		  Pid1.y_ref = ENC_Cnt;
+		  ENC_Cnt_prev = ENC_Cnt;
+	  }
+
+	  // polling
+
 	  if (USER_Btn_flag){
 		  USER_Btn_flag = 0;
 		  PID_reset(&Pid1);
@@ -216,8 +236,13 @@ int main(void)
 		UART_ReceiveFlag = 0;
 		int rx = atoi(UART_Message);
 
-		if(rx >= MAX_SPEED) Pid1.y_ref = MAX_SPEED;
-		else Pid1.y_ref = rx;
+		if(rx >= MAX_SPEED){
+			Pid1.y_ref = MAX_SPEED;
+		}
+		else{
+			Pid1.y_ref = rx;
+			__HAL_TIM_SET_COUNTER(&htim1, rx*ENC_CONST);
+		}
 
 		HAL_UART_Receive_IT(&huart3, (uint8_t*)UART_Message, 3);
 	  }
