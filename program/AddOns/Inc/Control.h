@@ -62,7 +62,7 @@ void PID_reset(PID *pid);
  * @brief   : function for compensation the deadzone due to the friction
  *
  * */
-static float Deadzone_compensation(float u);
+float Deadzone_compensation(float u);
 
 
 #endif /* PID_H_ */

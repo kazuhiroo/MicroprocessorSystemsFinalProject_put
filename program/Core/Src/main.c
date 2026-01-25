@@ -35,7 +35,7 @@
 #define ENC_PULSES_PER_REV  20 // signals per single rotation from the encoding disc
 #define MAX_SPEED 			150.0f // max speed for 5V from the VC
 #define ENC_CONST 			2
-#define START_SPEED 		100
+#define START_SPEED 		0
 
 /* USER CODE END PD */
 
@@ -122,11 +122,13 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim){
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
     if (htim == &htim6){
+    	// simple GFFr
         float u_ff = KFF * Pid1.y_ref;
         PID_update(&Pid1);
 
         float u_calc = u_ff + Pid1.u;
 
+        // saturation due to PWM limits
         if(u_calc > (float)PWM_MAX) u_calc = (float)PWM_MAX;
         if(u_calc < (float)PWM_MIN) u_calc = (float)PWM_MIN;
 
@@ -255,12 +257,12 @@ int main(void)
 	  }
 
 	  if(UART_TransmitFlag){
-		UART_TransmitFlag = 0;
-		char tx[32];
-		int len = snprintf(tx, sizeof(tx), "%.3f\r\n", Pid1.y);
-
-		HAL_UART_Transmit(&huart3, (uint8_t*)tx, len, 1);
+	      UART_TransmitFlag = 0;
+	      char tx[64];
+	      int len = snprintf(tx, sizeof(tx), "%.3f %.3f %.3f\r\n", Pid1.y_ref, Pid1.y, (float)u_global);
+	      HAL_UART_Transmit_IT(&huart3, (uint8_t*)tx, len);
 	  }
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
