@@ -29,12 +29,15 @@ void PID_update(PID *pid){
     pid->ui += pid->Ki * e * SAMPLING_PERIOD;
 
     //antiwind up (clamping)
-    if(pid->ui > 1000.0f) {
-        pid->ui = 1000.0f;
+    if(e > 0.0f){
+    	if(pid->ui > 1000.0f) {
+    	        pid->ui = 1000.0f;
+    	    }
+    	else if(pid->ui < 0.0f) {
+    	        pid->ui = 0.0f;
+    	    }
     }
-    else if(pid->ui < 0.0f) {
-        pid->ui = 0.0f;
-    }
+
 
     // derivative
     pid->ud = pid->Kd * (e - pid->e) / SAMPLING_PERIOD;
@@ -66,10 +69,10 @@ void PID_reset(PID *pid){
  *
  * */
 float Deadzone_compensation(float u){
-	 if (u >= 0.0f)
-		 return u + DEADZONE_PWM;
-	 else if(u < 0) return 0.0f;
-	     return 0.0f;
+    if (u < DEADZONE_PWM) {
+        return DEADZONE_PWM; // minimalne napięcie, aby ruszył silnik
+    }
+    return u; // jeśli sygnał wystarczająco duży, zostawiamy
 }
 
 

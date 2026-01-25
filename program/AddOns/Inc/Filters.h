@@ -9,7 +9,7 @@
 #ifndef INC_FILTERS_H_
 #define INC_FILTERS_H_
 
-#define AVG_FILT_SQ 10
+#define AVG_FILT_SQ 5
 
 
 /*

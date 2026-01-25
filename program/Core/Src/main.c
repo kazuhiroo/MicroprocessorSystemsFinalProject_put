@@ -134,7 +134,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 
         u_global = (uint32_t)u_calc;
 
-        life_timer += SAMPLING_PERIOD;
+//        life_timer += SAMPLING_PERIOD;
 //        if(life_timer >= 1000 * SAMPLING_PERIOD){
 //            Pid1.y = 0;
 //            u_global = 0;
@@ -218,17 +218,18 @@ int main(void)
 	  // input via encoder
 	  ENC_Cnt = __HAL_TIM_GET_COUNTER(&htim1)/ENC_CONST;
 	  if(ENC_Cnt_prev != ENC_Cnt){
-		  if(ENC_Cnt >= MAX_SPEED){
-			  ENC_Cnt = MAX_SPEED;
-			  Pid1.y_ref = MAX_SPEED;
+		  int32_t delta = ENC_Cnt - ENC_Cnt_prev; // sprawdzamy kierunek
+		  ENC_Cnt_prev = ENC_Cnt;
+
+		  if(delta > 0){ // obrót w górę
+		      if(Pid1.y_ref < MAX_SPEED)
+		          Pid1.y_ref++;
 		  }
-		  else if(ENC_Cnt <= 0){
-			  ENC_Cnt = 0;
-			  Pid1.y_ref = 0;
+		  else if(delta < 0){ // obrót w dół
+		      if(Pid1.y_ref > 0)
+		          Pid1.y_ref--;
 		  }
-		  else{
-			  Pid1.y_ref = ENC_Cnt;
-		  }
+
 
 
 		  ENC_Cnt_prev = ENC_Cnt;
