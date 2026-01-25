@@ -34,7 +34,7 @@
 #define FB_TIMER_FREQ       1000000.0f
 #define ENC_PULSES_PER_REV  20 // signals per single rotation from the encoding disc
 #define MAX_SPEED 			150.0f // max speed for 5V from the VC
-#define ENC_CONST 			4
+#define ENC_CONST 			2
 #define START_SPEED 		100
 
 /* USER CODE END PD */
