@@ -1,6 +1,6 @@
 ################################################################################
 # Automatically-generated file. Do not edit!
-# Toolchain: GNU Tools for STM32 (12.3.rel1)
+# Toolchain: GNU Tools for STM32 (13.3.rel1)
 ################################################################################
 
 -include ../makefile.init
@@ -61,8 +61,8 @@ all: main-build
 main-build: URA_DC_MOTOR.elf secondary-outputs
 
 # Tool invocations
-URA_DC_MOTOR.elf URA_DC_MOTOR.map: $(OBJS) $(USER_OBJS) C:\Users\Admin\Documents\studia\sem5\projekt\ systemy\ mikroprocesorowe\program\STM32F746ZGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "URA_DC_MOTOR.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m7 -T"C:\Users\Admin\Documents\studia\sem5\projekt systemy mikroprocesorowe\program\STM32F746ZGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="URA_DC_MOTOR.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv5-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -u _scanf_float -Wl,--start-group -lc -lm -Wl,--end-group
+URA_DC_MOTOR.elf URA_DC_MOTOR.map: $(OBJS) $(USER_OBJS) C:\Users\Admin\Documents\projekt_systemMikro\MicroprocessorSystemsFinalProject_put\program\STM32F746ZGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "URA_DC_MOTOR.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m7 -T"C:\Users\Admin\Documents\projekt_systemMikro\MicroprocessorSystemsFinalProject_put\program\STM32F746ZGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="URA_DC_MOTOR.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv5-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -u _scanf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

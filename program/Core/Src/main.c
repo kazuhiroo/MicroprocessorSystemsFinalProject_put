@@ -33,9 +33,9 @@
 /* USER CODE BEGIN PD */
 #define FB_TIMER_FREQ       1000000.0f
 #define ENC_PULSES_PER_REV  20 // signals per single rotation from the encoding disc
-#define MAX_SPEED 			150.0f // max speed for 5V from the VC
+#define MAX_SPEED 			300.0f // max speed for 5V from the VC
 #define ENC_CONST 			2
-#define START_SPEED 		0
+#define START_SPEED 		100
 
 /* USER CODE END PD */
 
@@ -60,8 +60,6 @@ _Bool UART_TransmitFlag = 0;
 uint8_t UART_TransmitCnt = 0;
 _Bool USER_Btn_flag = 0;
 
-uint8_t ENC_Cnt = 0;
-uint8_t ENC_Cnt_prev = 0;
 
 
 PID Pid1 = {
@@ -78,6 +76,10 @@ PID Pid1 = {
 		.y = 0.0f,
 		.y_ref = START_SPEED
 };
+
+uint8_t ENC_Cnt = START_SPEED;
+uint8_t ENC_Cnt_prev = START_SPEED;
+
 
 /* USER CODE END PV */
 
