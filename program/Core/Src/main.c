@@ -252,7 +252,7 @@ int main(void)
 			Pid1.y_ref = MAX_SPEED;
 		}
 		else{
-			Pid1.y_ref = rx;
+			Pid1.y_ref = rx-1;
 			__HAL_TIM_SET_COUNTER(&htim1, rx*ENC_CONST);
 		}
 
