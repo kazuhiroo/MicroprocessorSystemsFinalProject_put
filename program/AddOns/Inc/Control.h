@@ -14,9 +14,9 @@
 #define K 1.5277f
 
 // PID controller parameters
-#define KP 2.0f
-#define KI 2.0f
-#define KD 1.0f
+#define KP 2.21f
+#define KI 3.57f
+#define KD 0.085f
 #define KFF 0.0f
 
 #define CLOSED_LOOP 1
