@@ -148,7 +148,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
         __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, u_global);
 
         UART_TransmitCnt += 1;
-        if(UART_TransmitCnt == 100){
+        if(UART_TransmitCnt == 1){
             UART_TransmitCnt = 0;
             UART_TransmitFlag = 1;
         }

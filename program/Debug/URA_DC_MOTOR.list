@@ -2363,10 +2363,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
  8001744:	b2da      	uxtb	r2, r3
  8001746:	4b0f      	ldr	r3, [pc, #60]	@ (8001784 <HAL_TIM_PeriodElapsedCallback+0xc4>)
  8001748:	701a      	strb	r2, [r3, #0]
-        if(UART_TransmitCnt == 100){
+        if(UART_TransmitCnt == 1){
  800174a:	4b0e      	ldr	r3, [pc, #56]	@ (8001784 <HAL_TIM_PeriodElapsedCallback+0xc4>)
  800174c:	781b      	ldrb	r3, [r3, #0]
- 800174e:	2b64      	cmp	r3, #100	@ 0x64
+ 800174e:	2b01      	cmp	r3, #1
  8001750:	d105      	bne.n	800175e <HAL_TIM_PeriodElapsedCallback+0x9e>
             UART_TransmitCnt = 0;
  8001752:	4b0c      	ldr	r3, [pc, #48]	@ (8001784 <HAL_TIM_PeriodElapsedCallback+0xc4>)
