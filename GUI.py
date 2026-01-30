@@ -48,12 +48,11 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("DC MOTOR GUI - Speed control tracking")
 
         # data storage
-        self.max_pts = 10
+        self.max_pts = 1000
         self.data1 = []
         self.data2 = []
         self.data3 = []
 
-        # plot
         self.plot = pg.PlotWidget()
         self.plot.addLegend()
         self.plot.showGrid(x=False, y=True)
@@ -61,12 +60,31 @@ class MainWindow(QMainWindow):
         self.plot.getAxis('bottom').setTextPen(pg.mkPen('k'))
         self.plot.setBackground('k')
 
-        # curves
-        self.curve1 = self.plot.plot(name="Y_ref", pen=pg.mkPen(color = (255, 0, 0, 100), width=1.5))
-        self.curve2 = self.plot.plot(name="Y", pen=pg.mkPen(color = (50, 205, 50, 255), width=1.5))
-        self.curve3 = self.plot.plot(name="U", pen=pg.mkPen(color = (255, 0, 255, 255), width=1.5))
+        self.curve1 = self.plot.plot(name="Y_ref", pen=pg.mkPen(color=(255, 0, 0, 200), width=1.5))
+        self.curve2 = self.plot.plot(name="Y", pen=pg.mkPen(color=(50, 205, 50, 255), width=1.5))
 
-        # add graph to the widget created in designer
+        self.viewbox_U = pg.ViewBox()
+        self.plot.scene().addItem(self.viewbox_U)
+        self.viewbox_U.setXLink(self.plot)
+
+        self.viewbox_U.setYRange(0, 1000, padding=0)
+        self.plot.setYRange(0, 310, padding=0)
+
+        self.curve3 = pg.PlotDataItem(pen=pg.mkPen(color=(255, 0, 255, 200), width=1.5))
+        self.viewbox_U.addItem(self.curve3)
+
+        axisU = pg.AxisItem('right')
+        axisU.setPen(pg.mkPen('w'))
+        self.plot.plotItem.layout.addItem(axisU, 2, 2)
+        axisU.linkToView(self.viewbox_U)
+        self.viewbox_U.sigResized.connect(lambda: axisU.linkedViewChanged(self.viewbox_U, axisU.orientation()))
+
+
+        def update_views():
+            self.viewbox_U.setGeometry(self.plot.getPlotItem().vb.sceneBoundingRect())
+            self.viewbox_U.linkedViewChanged(self.plot.getPlotItem().vb, self.viewbox_U.XAxis)
+        update_views()
+
         layout = QVBoxLayout(self.plot_widget)
         layout.addWidget(self.plot)
 
