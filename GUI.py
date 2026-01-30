@@ -35,8 +35,8 @@ class SerialHandler(QObject):
         #self.ser.close()
 
     def send(self, val):
-        message = f"{int(val):03d}\n"
-        self.ser.write(message.encode())
+        message = f"{int(val):03d}"
+        self.ser.write(message.encode('ascii'))
         
 
 
