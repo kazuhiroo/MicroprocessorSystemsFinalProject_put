@@ -103,7 +103,6 @@ class MainWindow(QMainWindow):
 
         self.thread = threading.Thread(target=self.serial_port_handler.start, daemon=True)
         self.thread.start()
-
     
         self.horizontalSlider.valueChanged.connect(lambda val: self.serial_port_handler.send(val))
 
@@ -120,6 +119,11 @@ class MainWindow(QMainWindow):
         self.progressBar.setValue(int(v1))
         self.progressBar_2.setValue(int(v2))
         self.progressBar_3.setValue(int(v3))
+
+        # slider
+        self.horizontalSlider.blockSignals(True)
+        self.horizontalSlider.setValue(int(v1))
+        self.horizontalSlider.blockSignals(False)
 
         # plot handling
         if len(self.data1) >= self.max_pts:
