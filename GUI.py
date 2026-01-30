@@ -2,14 +2,15 @@ import sys
 import serial
 import threading
 import pyqtgraph as pg 
+from PyQt5 import uic
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QLabel, QTextEdit,
-    QVBoxLayout, QHBoxLayout
+    QVBoxLayout, QMainWindow
 )
 from PyQt5.QtCore import pyqtSignal, QObject
 
 
-class SerialReader(QObject):
+class SerialHandler(QObject):
     data_received = pyqtSignal(float, float, float)
 
     def __init__(self, port, baudrate=9600):
@@ -31,37 +32,29 @@ class SerialReader(QObject):
 
     def stop(self):
         self.running = False
-        self.ser.close()
+        #self.ser.close()
+
+    def send(self, val):
+        message = f"{int(val):03d}\n"
+        self.ser.write(message.encode())
+        
 
 
-class MainWindow(QWidget):
+class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        uic.loadUi("main.ui", self)
+
         self.setWindowTitle("DC MOTOR GUI - Speed control tracking")
 
-        # data history text edit (just in case)
-        self.text_edit = QTextEdit()
-        self.text_edit.setReadOnly(True)
-
-        # labels
-        self.label1 = QLabel("Y_ref: ---")
-        self.label2 = QLabel("Y: ---")
-        self.label3 = QLabel("U: ---")
-
-        labels_layout = QVBoxLayout()
-        labels_layout.addWidget(self.label1)
-        labels_layout.addWidget(self.label2)
-        labels_layout.addWidget(self.label3)
-        labels_layout.addStretch()
-
-        # data storage\
+        # data storage
         self.max_pts = 10
         self.data1 = []
         self.data2 = []
         self.data3 = []
 
         # plot
-        self.plot = pg.PlotWidget(title = "UART received data")
+        self.plot = pg.PlotWidget()
         self.plot.addLegend()
         self.plot.showGrid(x=False, y=True)
         self.plot.getAxis('bottom').setPen(pg.mkPen('k'))
@@ -73,25 +66,35 @@ class MainWindow(QWidget):
         self.curve2 = self.plot.plot(name="Y", pen=pg.mkPen(color = (50, 205, 50, 255), width=1.5))
         self.curve3 = self.plot.plot(name="U", pen=pg.mkPen(color = (255, 0, 255, 255), width=1.5))
 
-        main_layout = QHBoxLayout()
-        main_layout.addWidget(self.plot)
-        main_layout.addLayout(labels_layout)
-
-        self.setLayout(main_layout)
+        # add graph to the widget created in designer
+        layout = QVBoxLayout(self.plot_widget)
+        layout.addWidget(self.plot)
 
         # serial port handling
-        self.reader = SerialReader(port="COM3", baudrate=57600)
-        self.reader.data_received.connect(self.update_ui)
+        self.serial_port_handler = SerialHandler(port="COM3", baudrate=57600)
+        self.serial_port_handler.data_received.connect(self.update_ui)
 
-        self.thread = threading.Thread(target=self.reader.start, daemon=True)
+        self.thread = threading.Thread(target=self.serial_port_handler.start, daemon=True)
         self.thread.start()
 
-    def update_ui(self, v1, v2, v3):
-        #self.text_edit.append(f"{v1:.3f}  {v2:.3f}  {v3:.3f}")
-        self.label1.setText(f"Y_ref: {v1:.3f}")
-        self.label2.setText(f"Y: {v2:.3f}")
-        self.label3.setText(f"U: {v3:.3f}")
+    
+        self.horizontalSlider.valueChanged.connect(lambda val: self.serial_port_handler.send(val))
 
+    def set_running(self, bool):
+        self.serial_port_handler.running = bool
+
+    def update_ui(self, v1, v2, v3):
+        # lcd shows
+        self.lcdNumber_1.display(v1)
+        self.lcdNumber_2.display(v2)
+        self.lcdNumber_3.display(v3)
+
+        # progress bar
+        self.progressBar.setValue(int(v1))
+        self.progressBar_2.setValue(int(v2))
+        self.progressBar_3.setValue(int(v3))
+
+        # plot handling
         if len(self.data1) >= self.max_pts:
             self.data1.pop(0)
             self.data2.pop(0)
@@ -107,13 +110,12 @@ class MainWindow(QWidget):
 
 
     def closeEvent(self, event):
-        self.reader.stop()
+        self.serial_port_handler.stop()
         event.accept()
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
-    window.resize(600, 300)
     window.show()
     sys.exit(app.exec_())
