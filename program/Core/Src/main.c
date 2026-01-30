@@ -252,8 +252,10 @@ int main(void)
 			Pid1.y_ref = MAX_SPEED;
 		}
 		else{
-			Pid1.y_ref = rx-1;
+			Pid1.y_ref = rx;
 			__HAL_TIM_SET_COUNTER(&htim1, rx*ENC_CONST);
+			ENC_Cnt_prev = rx*ENC_CONST;
+			ENC_Cnt = rx*ENC_CONST;
 		}
 
 		HAL_UART_Receive_IT(&huart3, (uint8_t*)UART_Message, 3);
