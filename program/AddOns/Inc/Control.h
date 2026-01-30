@@ -14,8 +14,8 @@
 #define K 1.5277f
 
 // PID controller parameters
-#define KP 2.21f
-#define KI 3.57f
+#define KP 2.2f
+#define KI 3.5f
 #define KD 0.085f
 #define KFF 0.0f
 
