@@ -54,7 +54,7 @@ class MainWindow(QMainWindow):
         self.data3 = []
 
         self.plot = pg.PlotWidget()
-        self.plot.addLegend()
+        #self.plot.addLegend()
         self.plot.showGrid(x=False, y=True)
         self.plot.getAxis('bottom').setPen(pg.mkPen('k'))
         self.plot.getAxis('bottom').setTextPen(pg.mkPen('k'))
@@ -70,14 +70,23 @@ class MainWindow(QMainWindow):
         self.viewbox_U.setYRange(0, 1000, padding=0)
         self.plot.setYRange(0, 310, padding=0)
 
-        self.curve3 = pg.PlotDataItem(pen=pg.mkPen(color=(255, 0, 255, 200), width=1.5))
+        self.curve3 = pg.PlotDataItem(pen=pg.mkPen(color=(255, 0, 255, 100), width=1.5))
         self.viewbox_U.addItem(self.curve3)
 
         axisU = pg.AxisItem('right')
         axisU.setPen(pg.mkPen('w'))
         self.plot.plotItem.layout.addItem(axisU, 2, 2)
         axisU.linkToView(self.viewbox_U)
-        self.viewbox_U.sigResized.connect(lambda: axisU.linkedViewChanged(self.viewbox_U, axisU.orientation()))
+        
+        self.legend = self.plot.addLegend()
+
+        self.curve1 = self.plot.plot(name="Y_ref", pen=pg.mkPen(color=(255, 0, 0, 200), width=1.5))
+        self.curve2 = self.plot.plot(name="Y", pen=pg.mkPen(color=(50, 205, 50, 255), width=1.5))
+
+        self.curve3 = pg.PlotDataItem(pen=pg.mkPen(color=(255, 0, 255, 100), width=1.5))
+        self.viewbox_U.addItem(self.curve3)
+
+        self.legend.addItem(self.curve3, "U")
 
 
         def update_views():
