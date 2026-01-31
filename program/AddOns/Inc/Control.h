@@ -6,7 +6,7 @@
  * parameters, and functions required to control a DC motor
  * in a closed-loop system using a PID algorithm.
  *
- * @author  Adam Katowski
+ * @author  a.katowski, https://github.com/kazuhiroo
  * @date    2026-01-17
  */
 

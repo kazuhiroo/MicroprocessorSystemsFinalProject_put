@@ -6,7 +6,7 @@
  * prototypes for signal processing within the control loop.
  *
  *
- * @author  Adam Katowski
+ * @author  a.katowski, https://github.com/kazuhiroo
  * @date    2026-01-17
  */
 
