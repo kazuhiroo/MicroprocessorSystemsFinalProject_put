@@ -1,10 +1,14 @@
-/*
-  * @file    : Control.h
-  * @author  : a.katowski, https://github.com/kazuhiroo
-  * @date    : Jan 17, 2026
-  * @brief   : PID controller algorithm implementation for a sa 3-6V DC Motor.
-  *
-*/
+/**
+ * @file Control.h
+ * @brief Public interface of a PID controller for a 3–6 V DC motor.
+ *
+ * This file defines the PID controller structure, configuration
+ * parameters, and functions required to control a DC motor
+ * in a closed-loop system using a PID algorithm.
+ *
+ * @author  Adam Katowski
+ * @date    2026-01-17
+ */
 
 #ifndef PID_H_
 #define PID_H_
@@ -14,6 +18,7 @@
 #define K 1.5277f
 
 // PID controller parameters
+
 #define KP 2.2f
 #define KI 3.5f
 #define KD 0.085f
@@ -31,7 +36,11 @@
 
 #define DEADZONE_PWM		500
 
-
+/**
+ * @brief PID controller structure.
+ *
+ * Stores controller gains, internal states, and input/output values.
+ */
 typedef struct{
     float Kp;
     float Ki;
@@ -47,21 +56,36 @@ typedef struct{
     float y_ref;
 } PID;
 
-/*
- * @brief   : function updating the output of the PID controller ( steering signal: PWM duty)
+/**
+ * @brief Updates the output of the PID controller.
  *
- * */
+ * Computes a new control signal (PWM duty cycle) based on
+ * the current error and controller parameters.
+ *
+ * @param pid Pointer to the PID controller structure
+ */
 void PID_update(PID *pid);
 
-/*
- * @brief   : function for absolute controller reset
+/**
+ * @brief Resets the internal state of the PID controller.
  *
- * */
+ * Returns PID to starting state, setting values of every signal to 0
+ * 
+ *
+ * @param pid Pointer to the PID controller structure
+ */
 void PID_reset(PID *pid);
-/*
- * @brief   : function for compensation the deadzone due to the friction
+
+/**
+ * @brief Compensates the deadzone caused by motor friction.
  *
- * */
+ * Returns fixed signal if value of signal 
+ * u falls below a threshold for starting 
+ * motor rotation.
+ *
+ * @param u Raw control signal
+ * @return Control signal after deadzone compensation
+ */
 float Deadzone_compensation(float u);
 
 

@@ -1,8 +1,8 @@
 /* USER CODE BEGIN Header */
 /**
   ******************************************************************************
-  * @file           : main.c
-  * @brief          : main program body
+  * @file            main.c
+  * @brief           main program body
   ******************************************************************************
   */
 /* USER CODE END Header */

@@ -1,8 +1,8 @@
 /*
-  * @file    : Filters.c
-  * @author  : a.katowski, https://github.com/kazuhiroo
-  * @date    : Jan 17, 2026
-  * @brief   : Implemented filters for the signals in the loop
+  * @file     Filters.c
+  * @author   a.katowski, https://github.com/kazuhiroo
+  * @date     Jan 17, 2026
+  * @brief    Implemented filters for the signals in the loop
   *
 */
 
