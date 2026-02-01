@@ -10,8 +10,20 @@
     <height>885</height>
    </rect>
   </property>
+  <property name="font">
+   <font>
+    <family>Fira Code Medium</family>
+    <pointsize>12</pointsize>
+   </font>
+  </property>
   <property name="windowTitle">
    <string>MainWindow</string>
+  </property>
+  <property name="inputMethodHints">
+   <set>Qt::ImhNone</set>
+  </property>
+  <property name="documentMode">
+   <bool>false</bool>
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="styleSheet">
@@ -25,7 +37,7 @@ color: white;
       <x>0</x>
       <y>0</y>
       <width>1291</width>
-      <height>571</height>
+      <height>551</height>
      </rect>
     </property>
    </widget>
@@ -125,7 +137,7 @@ color: white;
      <number>6</number>
     </property>
     <property name="value" stdset="0">
-     <double>123.123000000000005</double>
+     <double>123.000000000000000</double>
     </property>
     <property name="intValue" stdset="0">
      <number>123</number>
@@ -159,7 +171,7 @@ color: white;
      <number>6</number>
     </property>
     <property name="value" stdset="0">
-     <double>123.123000000000005</double>
+     <double>123.000000000000000</double>
     </property>
     <property name="intValue" stdset="0">
      <number>123</number>
@@ -170,7 +182,7 @@ color: white;
      <rect>
       <x>10</x>
       <y>580</y>
-      <width>1271</width>
+      <width>1011</width>
       <height>22</height>
      </rect>
     </property>
@@ -199,7 +211,7 @@ color: white;
      <enum>Qt::Horizontal</enum>
     </property>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>330</x>
@@ -438,10 +450,29 @@ color: white;
      <number>6</number>
     </property>
     <property name="value" stdset="0">
-     <double>123.123000000000005</double>
+     <double>123.000000000000000</double>
     </property>
     <property name="intValue" stdset="0">
      <number>123</number>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="lineEdit">
+    <property name="geometry">
+     <rect>
+      <x>1125</x>
+      <y>569</y>
+      <width>91</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="maxLength">
+     <number>3</number>
+    </property>
+    <property name="frame">
+     <bool>true</bool>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignJustify|Qt::AlignVCenter</set>
     </property>
    </widget>
   </widget>

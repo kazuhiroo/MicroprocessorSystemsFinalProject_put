@@ -37,6 +37,8 @@ class SerialHandler(QObject):
     def send(self, val):
         message = f"{int(val):03d}"
         self.ser.write(message.encode('ascii'))
+
+
         
 
 
@@ -92,10 +94,18 @@ class MainWindow(QMainWindow):
         self.thread.start()
 
         self.horizontalSlider.valueChanged.connect(lambda val: self.serial_port_handler.send(val))
+        self.lineEdit.returnPressed.connect(self.send_from_lineEdit)
 
 
     def set_running(self, bool):
         self.serial_port_handler.running = bool
+
+
+    def send_from_lineEdit(self):
+        val = int(self.lineEdit.text())
+        self.serial_port_handler.send(val)
+        self.horizontalSlider.setValue(val)
+
 
     def update_ui(self, v1, v2, v3):
         # lcd shows
@@ -112,6 +122,12 @@ class MainWindow(QMainWindow):
         self.horizontalSlider.blockSignals(True)
         self.horizontalSlider.setValue(int(v1))
         self.horizontalSlider.blockSignals(False)
+
+        if not self.lineEdit.hasFocus():
+            self.lineEdit.blockSignals(True)
+            self.lineEdit.setText(str(int(v1)))
+            self.lineEdit.blockSignals(False)
+
 
         # plot handling
         if len(self.data1) >= self.max_pts:
