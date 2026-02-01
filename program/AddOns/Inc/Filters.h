@@ -7,6 +7,8 @@
  *
  *
  * @author  a.katowski, https://github.com/kazuhiroo
+ * @author  o.jozwik, https://github.com/oskarjozwik
+ * @author  i.kolas, https://github.com/ililich
  * @date    2026-01-17
  */
 

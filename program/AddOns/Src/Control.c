@@ -1,6 +1,8 @@
 /*
   * @file     Control.c
-  * @author   a.katowski https://github.com/kazuhiroo,
+ * @author  a.katowski, https://github.com/kazuhiroo
+ * @author  o.jozwik, https://github.com/oskarjozwik
+ * @author  i.kolas, https://github.com/ililich
   * @date     Jan 17, 2026
   * @brief    PID controller algorithm implementation for a 3-6V DC Motor.
   *

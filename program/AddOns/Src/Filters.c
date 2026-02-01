@@ -1,6 +1,8 @@
 /*
   * @file     Filters.c
-  * @author   a.katowski, https://github.com/kazuhiroo
+ * @author  a.katowski, https://github.com/kazuhiroo
+ * @author  o.jozwik, https://github.com/oskarjozwik
+ * @author  i.kolas, https://github.com/ililich
   * @date     Jan 17, 2026
   * @brief    Implemented filters for the signals in the loop
   *

@@ -1,2 +1,2 @@
-../AddOns/Src/Filters.c:18:6:AvgFilter_Reset	16	static
-../AddOns/Src/Filters.c:28:7:AvgFilter	32	static
+../AddOns/Src/Filters.c:20:6:AvgFilter_Reset	16	static
+../AddOns/Src/Filters.c:30:7:AvgFilter	32	static
