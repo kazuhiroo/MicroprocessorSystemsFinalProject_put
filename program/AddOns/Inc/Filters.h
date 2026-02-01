@@ -14,7 +14,7 @@
 #ifndef INC_FILTERS_H_
 #define INC_FILTERS_H_
 
-#define AVG_FILT_SQ 5
+#define AVG_FILT_SQ 10
 
 
 /**
@@ -27,5 +27,15 @@
  * @return Filtered output value
  */
 float AvgFilter(float input);
+
+
+/**
+ * @brief Moving average filter.
+ *
+ * Resets the average buffer of the last N samples
+ *
+ */
+void AvgFilter_Reset(void);
+
 
 #endif /* INC_FILTERS_H_ */

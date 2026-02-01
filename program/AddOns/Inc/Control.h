@@ -7,6 +7,8 @@
  * in a closed-loop system using a PID algorithm.
  *
  * @author  a.katowski, https://github.com/kazuhiroo
+ * @author  a.katowski, https://github.com/kazuhiroo
+ * @author  a.katowski, https://github.com/kazuhiroo
  * @date    2026-01-17
  */
 

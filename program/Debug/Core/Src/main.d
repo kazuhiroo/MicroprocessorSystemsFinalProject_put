@@ -30,8 +30,8 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_uart.h \
  ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_uart_ex.h \
  ../Core/Inc/i2c.h ../Core/Inc/main.h ../Core/Inc/tim.h \
- ../Core/Inc/usart.h ../Core/Inc/gpio.h ../AddOns/Inc/Control.h \
- ../AddOns/Inc/Filters.h
+ ../Core/Inc/usart.h ../Core/Inc/gpio.h ../AddOns/Inc/Filters.h \
+ ../AddOns/Inc/Global_Variables.h ../AddOns/Inc/Control.h
 ../Core/Inc/main.h:
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal.h:
 ../Core/Inc/stm32f7xx_hal_conf.h:
@@ -68,5 +68,6 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Core/Inc/tim.h:
 ../Core/Inc/usart.h:
 ../Core/Inc/gpio.h:
-../AddOns/Inc/Control.h:
 ../AddOns/Inc/Filters.h:
+../AddOns/Inc/Global_Variables.h:
+../AddOns/Inc/Control.h:

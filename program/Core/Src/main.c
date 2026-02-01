@@ -15,13 +15,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <stdio.h>
-#include <stdlib.h>
-
-// controller
-#include "Control.h"
 #include "Filters.h"
-
+#include "Global_Variables.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -31,12 +26,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define FB_TIMER_FREQ       1000000.0f
-#define ENC_PULSES_PER_REV  20 // signals per single rotation from the encoding disc
-#define MAX_SPEED 			300.0f // max speed for 5V from the VC
-#define MIN_SPEED 			50.0f
-#define ENC_CONST 			2
-#define START_SPEED 		100
 
 /* USER CODE END PD */
 
@@ -48,38 +37,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-_Bool ic_start_flag = 1;
-uint32_t ic_prev = 0;
-uint32_t u_global = 0;
-float life_timer = 0;
 
-char UART_Message[] = "000";
-uint8_t UART_MessageLen = 3;
-
-_Bool UART_ReceiveFlag = 0;
-_Bool UART_TransmitFlag = 0;
-uint8_t UART_TransmitCnt = 0;
-_Bool USER_Btn_flag = 0;
-
-
-
-PID Pid1 = {
-		.Kp = KP,
-		.Ki = KI,
-		.Kd = KD,
-
-		.e  = 0.0f,
-		.u  = 0.0f,
-		.up = 0.0f,
-		.ui = 0.0f,
-		.ud = 0.0f,
-
-		.y = 0.0f,
-		.y_ref = START_SPEED
-};
-
-uint8_t ENC_Cnt = START_SPEED;
-uint8_t ENC_Cnt_prev = START_SPEED;
 
 
 /* USER CODE END PV */
@@ -92,8 +50,6 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim){
     if (htim == &htim4 && htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1){
         uint32_t now = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
@@ -115,7 +71,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim){
         if (diff > 0){
         	float speed = 60.0f * FB_TIMER_FREQ / (ENC_PULSES_PER_REV * diff);
         	if(speed >1.5*MAX_SPEED) return;
-        	speed = 0.8f * Pid1.y + 0.2f * speed; // small LPF
+        	speed = 0.8f * Pid1.y + 0.2f * speed;
         	Pid1.y = AvgFilter(speed); // average filter
         }
 
@@ -137,14 +93,16 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 
         u_global = (uint32_t)u_calc;
 
-//        life_timer += SAMPLING_PERIOD;
-//        if(life_timer >= 1000 * SAMPLING_PERIOD){
-//            Pid1.y = 0;
-//            u_global = 0;
-//            life_timer = 0.0f;
-//
-//            PID_reset(&Pid1);
-//        }
+        /*
+        life_timer += SAMPLING_PERIOD;
+        if(life_timer >= 1000 * SAMPLING_PERIOD){
+            Pid1.y = 0;
+            u_global = 0;
+            life_timer = 0.0f;
+
+            PID_reset(&Pid1);
+        }
+        */
 
         __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, u_global);
 
@@ -205,7 +163,7 @@ int main(void)
   MX_TIM6_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
-  HAL_UART_Receive_IT(&huart3, (uint8_t*)UART_Message, 3); // start receiving info
+  HAL_UART_Receive_IT(&huart3, (uint8_t*)UART_Message, UART_MessageLen); // start receiving info
 
   HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL); // init encoder mode
   __HAL_TIM_SET_COUNTER(&htim1, START_SPEED*ENC_CONST);
@@ -246,11 +204,13 @@ int main(void)
 	  if (USER_Btn_flag){
 		  USER_Btn_flag = 0;
 		  PID_reset(&Pid1);
+		  AvgFilter_Reset();
 	  }
 
 	  if(UART_ReceiveFlag){
 		UART_ReceiveFlag = 0;
 		int rx = atoi(UART_Message);
+		int delta = Pid1.y_ref - rx;
 
 		if(rx >= MAX_SPEED){
 			Pid1.y_ref = MAX_SPEED;
@@ -262,11 +222,15 @@ int main(void)
 			Pid1.y_ref = rx;
 		}
 
+		if(delta >= 150){
+			AvgFilter_Reset(); // secure for error filtering if the diff is too high
+		}
+
 		__HAL_TIM_SET_COUNTER(&htim1, rx*ENC_CONST);
 		ENC_Cnt = __HAL_TIM_GET_COUNTER(&htim1)/ENC_CONST;
 		ENC_Cnt_prev = ENC_Cnt;
 
-		HAL_UART_Receive_IT(&huart3, (uint8_t*)UART_Message, 3);
+		HAL_UART_Receive_IT(&huart3, (uint8_t*)UART_Message, UART_MessageLen);
 	  }
 
 	  if(UART_TransmitFlag){

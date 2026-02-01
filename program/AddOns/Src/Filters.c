@@ -8,12 +8,25 @@
 
 #include "Filters.h"
 
+
+static float input_buffer[AVG_FILT_SQ];
+
+/*
+ * @brief   : reset average filter samples.
+ *
+ * */
+void AvgFilter_Reset(void){
+    for(int i=0;i<AVG_FILT_SQ;i++){
+        input_buffer[i] = 0.0f;
+    }
+}
+
 /*
  * @brief   : moving average filter defined by the samples quantity.
  *
  * */
 float AvgFilter(float input){
-	static float input_buffer[AVG_FILT_SQ] = {0};
+	//static float input_buffer[AVG_FILT_SQ] = {0};
 	float output = 0.0f;
 	float sum = 0.0f;
 

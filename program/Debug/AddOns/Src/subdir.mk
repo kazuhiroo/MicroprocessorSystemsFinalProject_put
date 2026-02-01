@@ -6,15 +6,18 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../AddOns/Src/Control.c \
-../AddOns/Src/Filters.c 
+../AddOns/Src/Filters.c \
+../AddOns/Src/Global_Variables.c 
 
 OBJS += \
 ./AddOns/Src/Control.o \
-./AddOns/Src/Filters.o 
+./AddOns/Src/Filters.o \
+./AddOns/Src/Global_Variables.o 
 
 C_DEPS += \
 ./AddOns/Src/Control.d \
-./AddOns/Src/Filters.d 
+./AddOns/Src/Filters.d \
+./AddOns/Src/Global_Variables.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
@@ -24,7 +27,7 @@ AddOns/Src/%.o AddOns/Src/%.su AddOns/Src/%.cyclo: ../AddOns/Src/%.c AddOns/Src/
 clean: clean-AddOns-2f-Src
 
 clean-AddOns-2f-Src:
-	-$(RM) ./AddOns/Src/Control.cyclo ./AddOns/Src/Control.d ./AddOns/Src/Control.o ./AddOns/Src/Control.su ./AddOns/Src/Filters.cyclo ./AddOns/Src/Filters.d ./AddOns/Src/Filters.o ./AddOns/Src/Filters.su
+	-$(RM) ./AddOns/Src/Control.cyclo ./AddOns/Src/Control.d ./AddOns/Src/Control.o ./AddOns/Src/Control.su ./AddOns/Src/Filters.cyclo ./AddOns/Src/Filters.d ./AddOns/Src/Filters.o ./AddOns/Src/Filters.su ./AddOns/Src/Global_Variables.cyclo ./AddOns/Src/Global_Variables.d ./AddOns/Src/Global_Variables.o ./AddOns/Src/Global_Variables.su
 
 .PHONY: clean-AddOns-2f-Src
 

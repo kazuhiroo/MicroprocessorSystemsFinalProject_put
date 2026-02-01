@@ -1,1 +1,2 @@
-../AddOns/Src/Filters.c:15:7:AvgFilter	3
+../AddOns/Src/Filters.c:18:6:AvgFilter_Reset	2
+../AddOns/Src/Filters.c:28:7:AvgFilter	3
