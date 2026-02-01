@@ -34,6 +34,7 @@
 #define FB_TIMER_FREQ       1000000.0f
 #define ENC_PULSES_PER_REV  20 // signals per single rotation from the encoding disc
 #define MAX_SPEED 			300.0f // max speed for 5V from the VC
+#define MIN_SPEED 			50.0f
 #define ENC_CONST 			2
 #define START_SPEED 		100
 
@@ -220,25 +221,28 @@ int main(void)
 	  // input via encoder
 	  ENC_Cnt = __HAL_TIM_GET_COUNTER(&htim1)/ENC_CONST;
 	  if(ENC_Cnt_prev != ENC_Cnt){
-		  int32_t delta = ENC_Cnt - ENC_Cnt_prev; // sprawdzamy kierunek
+		  int32_t delta = ENC_Cnt - ENC_Cnt_prev;
 		  ENC_Cnt_prev = ENC_Cnt;
 
-		  if(delta > 0){ // obrót w górę
+		  if(delta > 0){
 		      if(Pid1.y_ref < MAX_SPEED)
 		          Pid1.y_ref++;
+		      else{
+		    	  Pid1.y_ref = MAX_SPEED;
+		      }
 		  }
-		  else if(delta < 0){ // obrót w dół
-		      if(Pid1.y_ref > 0)
+		  else if(delta < 0){
+		      if(Pid1.y_ref > MIN_SPEED)
 		          Pid1.y_ref--;
+		      else{
+		    	  Pid1.y_ref = MIN_SPEED;
+		      }
 		  }
-
-
 
 		  ENC_Cnt_prev = ENC_Cnt;
 	  }
 
 	  // polling
-
 	  if (USER_Btn_flag){
 		  USER_Btn_flag = 0;
 		  PID_reset(&Pid1);
@@ -251,12 +255,16 @@ int main(void)
 		if(rx >= MAX_SPEED){
 			Pid1.y_ref = MAX_SPEED;
 		}
+		else if(rx <= MIN_SPEED){
+			Pid1.y_ref = MIN_SPEED;
+		}
 		else{
 			Pid1.y_ref = rx;
-			__HAL_TIM_SET_COUNTER(&htim1, rx*ENC_CONST);
-			ENC_Cnt_prev = rx*ENC_CONST;
-			ENC_Cnt = rx*ENC_CONST;
 		}
+
+		__HAL_TIM_SET_COUNTER(&htim1, rx*ENC_CONST);
+		ENC_Cnt = __HAL_TIM_GET_COUNTER(&htim1)/ENC_CONST;
+		ENC_Cnt_prev = ENC_Cnt;
 
 		HAL_UART_Receive_IT(&huart3, (uint8_t*)UART_Message, 3);
 	  }
